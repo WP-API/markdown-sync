@@ -59,7 +59,7 @@ abstract class Importer {
 	 *
 	 * @return string Post type slug to import as.
 	 */
-	abstract protected function get_post_type();
+	abstract public function get_post_type();
 
 	/**
 	 * Get existing data for a given post.
