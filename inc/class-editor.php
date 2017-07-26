@@ -2,6 +2,8 @@
 
 namespace WordPressdotorg\Markdown;
 
+use WP_Post;
+
 class Editor {
 	public function __construct( Importer $importer ) {
 		$this->importer = $importer;
@@ -12,6 +14,7 @@ class Editor {
 		add_filter( 'get_edit_post_link', array( $this, 'redirect_edit_link_to_github' ), 10, 3 );
 		add_filter( 'o2_filter_post_actions', array( $this, 'redirect_o2_edit_link_to_github' ), 11, 2 );
 		add_action( 'wp_head', array( $this, 'render_edit_button_style' ) );
+		add_action( 'edit_form_top', array( $this, 'render_editor_warning' ) );
 	}
 
 	public function render_edit_button_style() {
@@ -41,6 +44,24 @@ class Editor {
 			}
 		</style>
 		<?php
+	}
+
+	/**
+	 * Render a warning for editors accessing the edit page via the admin.
+	 *
+	 * @param WP_Post $post Post being edited.
+	 */
+	public function render_editor_warning( WP_Post $post ) {
+		if ( $post->post_type !== $this->importer->get_post_type() ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p>%s</p><p><a href="%s">%s</a></p></div>',
+			'This page is maintained on GitHub. Content, title, and slug edits here will be discarded on next sync.',
+			$this->get_markdown_edit_link( $post->ID ),
+			'Edit on GitHub'
+		);
 	}
 
 	/**
