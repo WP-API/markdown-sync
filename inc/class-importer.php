@@ -301,6 +301,7 @@ abstract class Importer {
 		// Transform to HTML and save the post
 		jetpack_require_lib( 'markdown' );
 		$parser = new WPCom_GHF_Markdown_Parser();
+		$parser->preserve_shortcodes = false;
 		$html = $parser->transform( $markdown );
 		$post_data = array(
 			'ID'           => $post_id,
