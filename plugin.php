@@ -5,5 +5,6 @@
  * Author: Daniel Bachhuber and Ryan McCue
  */
 
+require __DIR__ . '/inc/class-yaml.php';
 require __DIR__ . '/inc/class-editor.php';
 require __DIR__ . '/inc/class-importer.php';

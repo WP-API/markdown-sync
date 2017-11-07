@@ -281,11 +281,20 @@ abstract class Importer {
 		$etag = wp_remote_retrieve_header( $response, 'etag' );
 
 		$markdown = wp_remote_retrieve_body( $response );
-		// Strip YAML doc from the header
-		$markdown = preg_replace( '#^---(.+)---#Us', '', $markdown );
+
+		// Get YAML doc from the header
+		preg_match( '#^---(.+)---#Us', $markdown, $yaml );
+		if ( $yaml ) {
+			$yaml_parser = new Yaml();
+			$yaml        = $yaml_parser->loadString( $yaml[1] );
+			// Strip YAML doc from the header
+			$markdown = preg_replace( '#^---(.+)---#Us', '', $markdown );
+		}
 
 		$title = null;
-		if ( preg_match( '/^#\s(.+)/', $markdown, $matches ) ) {
+		if ( isset( $yaml['title'] ) ) {
+			$title = $yaml['title'];
+		} elseif ( preg_match( '/^#\s(.+)/', $markdown, $matches ) ) {
 			$title = $matches[1];
 			$markdown = preg_replace( '/^#\swp\s(.+)/', '', $markdown );
 		}
@@ -313,8 +322,23 @@ abstract class Importer {
 		}
 		wp_update_post( $post_data );
 
+		// Add meta data from YAML front matter.
+		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
+			foreach ( $yaml['meta'] as $key => $value ) {
+				update_post_meta( $post_id, $key, $value );
+			}
+		}
+
 		// Set ETag for future updates.
 		update_post_meta( $post_id, $this->etag_meta_key, wp_slash( $etag ) );
+
+		/**
+		 * Action for any post processing after post update.
+		 *
+		 * @param int        $post_id The post's ID.
+		 * @param array|bool $yaml    The YAML front matter as an array.
+		 */
+		do_action( 'wordpressdotorg.markdown.update_post', $post_id, $yaml );
 
 		return true;
 	}
