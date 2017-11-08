@@ -341,7 +341,7 @@ abstract class Importer {
 
 		// Add meta data from YAML front matter.
 		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
-			$whitelist_keys = apply_filters( 'wordpressdotorg.markdown.meta_whitelist', array(
+			$whitelist_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(
 				'_wp_page_template',
 			), $yaml );
 			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelist_keys ) );
@@ -359,7 +359,7 @@ abstract class Importer {
 		 * @param int        $post_id The post's ID.
 		 * @param array|bool $yaml    The YAML front matter as an array.
 		 */
-		do_action( 'wordpressdotorg.markdown.update_post', $post_id, $yaml );
+		do_action( 'wordpressdotorg.markdown_sync.update_post', $post_id, $yaml );
 
 		return true;
 	}
