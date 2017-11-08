@@ -346,9 +346,6 @@ abstract class Importer {
 			), $yaml );
 			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelist_keys ) );
 			foreach ( $meta as $key => $value ) {
-				if ( ! in_array( $key, $whitelist_keys, true ) ) {
-					continue;
-				}
 				update_post_meta( $post_id, wp_slash( $key ), wp_slash( $value ) );
 			}
 		}
