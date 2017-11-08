@@ -178,7 +178,7 @@ abstract class Importer {
 			'post_status' => 'publish',
 			'post_parent' => $post_parent,
 			'post_title'  => wp_slash( $doc['slug'] ),
-			'post_name'   => sanitize_title_with_dashes( $doc['slug'] ),
+			'post_name'   => sanitize_title( $doc['slug'] ),
 		);
 		if ( isset( $doc['title'] ) ) {
 			$doc['post_title'] = sanitize_text_field( wp_slash( $doc['title'] ) );
@@ -283,12 +283,14 @@ abstract class Importer {
 		$markdown = wp_remote_retrieve_body( $response );
 
 		// Get YAML doc from the header
-		preg_match( '#^---(.+)---#Us', $markdown, $yaml );
-		if ( $yaml ) {
+		preg_match( '#^---(.+)---#Us', $markdown, $yaml_matches );
+		if ( $yaml_matches ) {
 			$yaml_parser = new Yaml();
-			$yaml        = $yaml_parser->loadString( $yaml[1] );
+			$yaml        = $yaml_parser->loadString( $yaml_matches[1] );
 			// Strip YAML doc from the header
-			$markdown = preg_replace( '#^---(.+)---#Us', '', $markdown );
+			$markdown = substr( $markdown, strlen( $yaml_matches[0] ) );
+		} else {
+			$yaml = array();
 		}
 
 		$title = null;
@@ -320,12 +322,34 @@ abstract class Importer {
 		if ( ! is_null( $title ) ) {
 			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
 		}
+		if ( isset( $yaml['published'] ) ) {
+			$post_data['post_status'] = (bool) $yaml['published'] ? 'publish' : 'draft';
+		}
+		if ( isset( $yaml['date'] ) ) {
+			$post_data['post_date'] = date( 'Y-m-d H:i:s', strtotime( $yaml['date'] ) );
+		}
+		if ( isset( $yaml['category'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
+			wp_set_post_terms( $post_id, wp_slash( $yaml['category'] ), 'category' );
+		}
+		if ( isset( $yaml['categories'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
+			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['categories'] ), 'category' );
+		}
+		if ( isset( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
+			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['tags'] ), 'post_tag' );
+		}
 		wp_update_post( $post_data );
 
 		// Add meta data from YAML front matter.
 		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
-			foreach ( $yaml['meta'] as $key => $value ) {
-				update_post_meta( $post_id, $key, $value );
+			$whitelist_keys = apply_filters( 'wordpressdotorg.markdown.meta_whitelist', array(
+				'_wp_page_template',
+			), $yaml );
+			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelist_keys ) );
+			foreach ( $meta as $key => $value ) {
+				if ( ! in_array( $key, $whitelist_keys, true ) ) {
+					continue;
+				}
+				update_post_meta( $post_id, wp_slash( $key ), wp_slash( $value ) );
 			}
 		}
 
