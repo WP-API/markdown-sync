@@ -296,7 +296,7 @@ abstract class Importer {
 		$title = null;
 		if ( isset( $yaml['title'] ) ) {
 			$title = $yaml['title'];
-		} elseif ( preg_match( '/^#\s(.+)/', $markdown, $matches ) ) {
+		} elseif ( preg_match( '/^\n*#\s(.+)/', $markdown, $matches ) ) {
 			$title = $matches[1];
 			$markdown = preg_replace( '/^#\swp\s(.+)/', '', $markdown );
 		}
