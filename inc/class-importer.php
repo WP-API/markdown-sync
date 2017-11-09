@@ -328,6 +328,12 @@ abstract class Importer {
 		if ( isset( $yaml['date'] ) ) {
 			$post_data['post_date'] = date( 'Y-m-d H:i:s', strtotime( $yaml['date'] ) );
 		}
+		if ( isset( $yaml['author'] ) ) {
+			$user = get_user_by( 'slug', wp_slash( $yaml['author'] ) );
+			if ( $user ) {
+				$post_data['post_author'] = $user->ID;
+			}
+		}
 		if ( isset( $yaml['category'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
 			wp_set_post_terms( $post_id, wp_slash( $yaml['category'] ), 'category' );
 		}
