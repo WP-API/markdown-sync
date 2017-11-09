@@ -298,7 +298,7 @@ abstract class Importer {
 			$title = $yaml['title'];
 		} elseif ( preg_match( '/^\n*#\s(.+)/', $markdown, $matches ) ) {
 			$title = $matches[1];
-			$markdown = preg_replace( '/^#\swp\s(.+)/', '', $markdown );
+			$markdown = preg_replace( '/^\n*#\swp\s(.+)/', '', $markdown );
 		}
 		$markdown = trim( $markdown );
 
