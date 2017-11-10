@@ -334,23 +334,43 @@ abstract class Importer {
 				$post_data['post_author'] = $user->ID;
 			}
 		}
-		if ( isset( $yaml['category'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
-			wp_set_post_terms( $post_id, wp_slash( $yaml['category'] ), 'category' );
-		}
-		if ( isset( $yaml['categories'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
+		if ( isset( $yaml['categories'] ) && is_array( $yaml['categories'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
 			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['categories'] ), 'category' );
 		}
-		if ( isset( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
+		if ( isset( $yaml['tags'] ) && is_array( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
 			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['tags'] ), 'post_tag' );
 		}
 		wp_update_post( $post_data );
 
 		// Add meta data from YAML front matter.
 		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
-			$whitelist_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(
+			/**
+			 * Filters a whitelisted set of meta keys found in the markdown
+			 * YAML front matter.
+			 *
+			 * Example markdown:
+			 *
+			 * ---
+			 * title: Hello World
+			 * meta:
+			 *   foo: bar
+			 *   baz:
+			 *     - lurhmann
+			 * ---
+			 * # Markdown starts here
+			 *
+			 * Anything under `meta:` with a key that's present in $whitelisted_keys will
+			 * be imported as post meta. Arrays will be serialised.
+			 *
+			 * @default array( '_wp_page_template' )
+			 *
+			 * @param array $whitelist_keys The meta keys to be imported if found.
+			 * @param array $yaml           The parsed YAML front matter.
+			 */
+			$whitelisted_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(
 				'_wp_page_template',
 			), $yaml );
-			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelist_keys ) );
+			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelisted_keys ) );
 			foreach ( $meta as $key => $value ) {
 				update_post_meta( $post_id, wp_slash( $key ), wp_slash( $value ) );
 			}
