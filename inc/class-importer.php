@@ -261,7 +261,7 @@ abstract class Importer {
 
 		// Grab the stored ETag, and use it to deduplicate.
 		$args = array(
-			'headers' => array(),
+			'headers' => $this->get_markdown_source_headers( $post_id ),
 		);
 		$last_etag = get_post_meta( $post_id, $this->etag_meta_key, true );
 		if ( ! empty( $last_etag ) ) {
@@ -329,5 +329,15 @@ abstract class Importer {
 		}
 
 		return $markdown_source;
+	}
+
+	/**
+	 * Get headers to send to Markdown source URL.
+	 *
+	 * @param int $post_id Post ID being fetched.
+	 * @return array Headers to pass to wp_remote_request()
+	 */
+	protected function get_markdown_source_headers( $post_id ) {
+		return array();
 	}
 }
