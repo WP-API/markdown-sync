@@ -335,7 +335,7 @@ abstract class Importer {
 			}
 		}
 		if ( isset( $yaml['categories'] ) && is_array( $yaml['categories'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
-			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['categories'] ), 'category' );
+			wp_set_object_terms( $post_id, array_map( 'wp_slash', $yaml['categories'] ), 'category' );
 		}
 		if ( isset( $yaml['tags'] ) && is_array( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
 			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['tags'] ), 'post_tag' );
