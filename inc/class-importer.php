@@ -288,7 +288,7 @@ abstract class Importer {
 			$yaml_parser = new Yaml();
 			$yaml        = $yaml_parser->loadString( $yaml_matches[1] );
 			// Strip YAML doc from the header
-			$markdown = substr( $markdown, strlen( $yaml_matches[0] ) );
+			$markdown = mb_substr( $markdown, mb_strlen( $yaml_matches[0] ) );
 		} else {
 			$yaml = array();
 		}
@@ -296,7 +296,7 @@ abstract class Importer {
 		$title = null;
 		if ( preg_match( '/^\n*#\s(.+)/', $markdown, $matches ) ) {
 			$title    = $matches[1];
-			$markdown = preg_replace( '/^\n*#\swp\s(.+)/', '', $markdown );
+			$markdown = preg_replace( '/^\n*#\s(.+)/', '', $markdown );
 		}
 		// Allow YAML override.
 		if ( isset( $yaml['title'] ) ) {
