@@ -294,18 +294,20 @@ abstract class Importer {
 		}
 
 		$title = null;
+		if ( preg_match( '/^\n*#\s(.+)/', $markdown, $matches ) ) {
+			$title    = $matches[1];
+			$markdown = preg_replace( '/^\n*#\swp\s(.+)/', '', $markdown );
+		}
+		// Allow YAML override.
 		if ( isset( $yaml['title'] ) ) {
 			$title = $yaml['title'];
-		} elseif ( preg_match( '/^\n*#\s(.+)/', $markdown, $matches ) ) {
-			$title = $matches[1];
-			$markdown = preg_replace( '/^\n*#\swp\s(.+)/', '', $markdown );
 		}
 		$markdown = trim( $markdown );
 
 		// Steal the first sentence as the excerpt
 		$excerpt = '';
 		if ( preg_match( '/^(.+)/', $markdown, $matches ) ) {
-			$excerpt = $matches[1];
+			$excerpt  = $matches[1];
 			$markdown = preg_replace( '/^(.+)/', '', $markdown );
 		}
 
@@ -321,6 +323,9 @@ abstract class Importer {
 		);
 		if ( ! is_null( $title ) ) {
 			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
+		}
+		if ( isset( $yaml['description'] ) ) {
+			$post_data['post_excerpt'] = sanitize_text_field( wp_slash( $yaml['description'] ) );
 		}
 		if ( isset( $yaml['published'] ) ) {
 			$post_data['post_status'] = (bool) $yaml['published'] ? 'publish' : 'draft';
