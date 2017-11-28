@@ -296,7 +296,7 @@ abstract class Importer {
 		$title = null;
 		if ( preg_match( '/^\n*#\s([^\n]+)/', $markdown, $matches ) ) {
 			$title    = $matches[1];
-			$markdown = preg_replace( '/^\n*#\s([\n]+)/', '', $markdown );
+			$markdown = preg_replace( '/^\n*#\s([^\n]+)/', '', $markdown );
 		}
 		// Allow YAML override.
 		if ( isset( $yaml['title'] ) ) {
@@ -304,9 +304,9 @@ abstract class Importer {
 		}
 		$markdown = trim( $markdown );
 
-		// Steal the first sentence as the excerpt
+		// Steal the first paragraph as the excerpt
 		$excerpt = '';
-		if ( preg_match( '/^([^\.]+)[\s$]/m', $markdown, $matches ) ) {
+		if ( preg_match( '/^(.*?)\n\n/', $markdown, $matches ) ) {
 			$excerpt = $matches[1];
 		}
 
