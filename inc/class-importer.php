@@ -85,7 +85,10 @@ abstract class Importer {
 	 * Fetches the manifest, parses, and creates pages as needed.
 	 */
 	public function import_manifest() {
-		$response = wp_remote_get( $this->get_manifest_url() );
+		$options = [
+			'headers' => $this->get_manifest_headers(),
+		];
+		$response = wp_remote_get( $this->get_manifest_url(), $options );
 		if ( is_wp_error( $response ) ) {
 			if ( class_exists( 'WP_CLI' ) ) {
 				WP_CLI::error( $response->get_error_message() );
@@ -256,12 +259,11 @@ abstract class Importer {
 		}
 
 		// Transform GitHub repo HTML pages into their raw equivalents
-		$markdown_source = preg_replace( '#https?://github\.com/([^/]+/[^/]+)/blob/(.+)#', 'https://raw.githubusercontent.com/$1/$2', $markdown_source );
-		$markdown_source = add_query_arg( 'v', time(), $markdown_source );
+		$markdown_source = $this->get_markdown_download_source( $markdown_source, $post_id );
 
 		// Grab the stored ETag, and use it to deduplicate.
 		$args = array(
-			'headers' => array(),
+			'headers' => $this->get_markdown_source_headers( $post_id ),
 		);
 		$last_etag = get_post_meta( $post_id, $this->etag_meta_key, true );
 		if ( ! empty( $last_etag ) ) {
@@ -329,5 +331,37 @@ abstract class Importer {
 		}
 
 		return $markdown_source;
+	}
+
+	/**
+	 * Convert the source URL to a download URL.
+	 *
+	 * @param string $source_url Source URL from {@see get_markdown_source}.
+	 * @param int    $post_id Post ID being fetched.
+	 * @return string URL to download source from.
+	 */
+	protected function get_markdown_download_source( $source_url, $post_id ) {
+		$source_url = preg_replace( '#https?://github\.com/([^/]+/[^/]+)/blob/(.+)#', 'https://raw.githubusercontent.com/$1/$2', $source_url );
+		$source_url = add_query_arg( 'v', time(), $source_url );
+		return $source_url;
+	}
+
+	/**
+	 * Get headers to send to Markdown source URL.
+	 *
+	 * @param int $post_id Post ID being fetched.
+	 * @return array Headers to pass to wp_remote_request()
+	 */
+	protected function get_markdown_source_headers( $post_id ) {
+		return array();
+	}
+
+	/**
+	 * Get headers to send to manifest URL.
+	 *
+	 * @return array Headers to pass to wp_remote_request()
+	 */
+	protected function get_manifest_headers() {
+		return array();
 	}
 }
