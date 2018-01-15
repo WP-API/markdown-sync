@@ -85,7 +85,10 @@ abstract class Importer {
 	 * Fetches the manifest, parses, and creates pages as needed.
 	 */
 	public function import_manifest() {
-		$response = wp_remote_get( $this->get_manifest_url() );
+		$options = [
+			'headers' => $this->get_manifest_headers(),
+		];
+		$response = wp_remote_get( $this->get_manifest_url(), $options );
 		if ( is_wp_error( $response ) ) {
 			if ( class_exists( 'WP_CLI' ) ) {
 				WP_CLI::error( $response->get_error_message() );
@@ -350,6 +353,15 @@ abstract class Importer {
 	 * @return array Headers to pass to wp_remote_request()
 	 */
 	protected function get_markdown_source_headers( $post_id ) {
+		return array();
+	}
+
+	/**
+	 * Get headers to send to manifest URL.
+	 *
+	 * @return array Headers to pass to wp_remote_request()
+	 */
+	protected function get_manifest_headers() {
 		return array();
 	}
 }
