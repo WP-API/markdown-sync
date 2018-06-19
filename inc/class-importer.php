@@ -311,6 +311,10 @@ abstract class Importer {
 		if ( preg_match( '/^(.*?)\n\n/', $markdown, $matches ) ) {
 			$excerpt = $matches[1];
 		}
+		// Allow YAML override.
+		if ( isset( $yaml['description'] ) ) {
+			$excerpt = $yaml['description'];
+		}
 
 		// Transform to HTML and save the post
 		jetpack_require_lib( 'markdown' );
@@ -324,9 +328,6 @@ abstract class Importer {
 		);
 		if ( ! is_null( $title ) ) {
 			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
-		}
-		if ( isset( $yaml['description'] ) ) {
-			$post_data['post_excerpt'] = sanitize_text_field( wp_slash( $yaml['description'] ) );
 		}
 		if ( isset( $yaml['published'] ) ) {
 			$post_data['post_status'] = (bool) $yaml['published'] ? 'publish' : 'draft';
