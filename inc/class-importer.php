@@ -329,24 +329,6 @@ abstract class Importer {
 		if ( ! is_null( $title ) ) {
 			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
 		}
-		if ( isset( $yaml['published'] ) ) {
-			$post_data['post_status'] = (bool) $yaml['published'] ? 'publish' : 'draft';
-		}
-		if ( isset( $yaml['date'] ) ) {
-			$post_data['post_date'] = date( 'Y-m-d H:i:s', strtotime( $yaml['date'] ) );
-		}
-		if ( isset( $yaml['author'] ) ) {
-			$user = get_user_by( 'slug', wp_slash( $yaml['author'] ) );
-			if ( $user ) {
-				$post_data['post_author'] = $user->ID;
-			}
-		}
-		if ( isset( $yaml['categories'] ) && is_array( $yaml['categories'] ) && is_object_in_taxonomy( $this->get_post_type(), 'category' ) ) {
-			wp_set_object_terms( $post_id, array_map( 'wp_slash', $yaml['categories'] ), 'category' );
-		}
-		if ( isset( $yaml['tags'] ) && is_array( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
-			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['tags'] ), 'post_tag' );
-		}
 
 		/**
 		 * Filters the post data saved to the database for a post.
