@@ -323,11 +323,11 @@ abstract class Importer {
 		$html = $parser->transform( $markdown );
 		$post_data = array(
 			'ID'           => $post_id,
-			'post_content' => wp_filter_post_kses( wp_slash( $html ) ),
-			'post_excerpt' => sanitize_text_field( wp_slash( $excerpt ) ),
+			'post_content' => wp_filter_post_kses( $html ),
+			'post_excerpt' => sanitize_text_field( $excerpt ),
 		);
 		if ( ! is_null( $title ) ) {
-			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
+			$post_data['post_title'] = sanitize_text_field( $title );
 		}
 
 		/**
@@ -340,7 +340,7 @@ abstract class Importer {
 		 * @param array $yaml      The parsed YAML front matter.
 		 */
 		$post_data = apply_filters( 'wordpressdotorg.markdown_sync.post_data', $post_data, $yaml );
-		wp_update_post( $post_data );
+		wp_update_post( wp_slash( $post_data ) );
 
 		// Add meta data from YAML front matter.
 		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
