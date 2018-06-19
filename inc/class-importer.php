@@ -362,14 +362,10 @@ abstract class Importer {
 			 * Anything under `meta:` with a key that's present in $whitelisted_keys will
 			 * be imported as post meta. Arrays will be serialised.
 			 *
-			 * @default array( '_wp_page_template' )
-			 *
 			 * @param array $whitelist_keys The meta keys to be imported if found.
 			 * @param array $yaml           The parsed YAML front matter.
 			 */
-			$whitelisted_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(
-				'_wp_page_template',
-			), $yaml );
+			$whitelisted_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(), $yaml );
 			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelisted_keys ) );
 			foreach ( $meta as $key => $value ) {
 				update_post_meta( $post_id, wp_slash( $key ), wp_slash( $value ) );
