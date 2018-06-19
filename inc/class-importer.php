@@ -346,6 +346,17 @@ abstract class Importer {
 		if ( isset( $yaml['tags'] ) && is_array( $yaml['tags'] ) && is_object_in_taxonomy( $this->get_post_type(), 'post_tag' ) ) {
 			wp_set_post_terms( $post_id, array_map( 'wp_slash', $yaml['tags'] ), 'post_tag' );
 		}
+
+		/**
+		 * Filters the post data saved to the database for a post.
+		 *
+		 * This can be used to set additional post fields based on YAML front
+		 * matter, such as publish data or author.
+		 *
+		 * @param array $post_data Post data to pass to wp_update_post()
+		 * @param array $yaml      The parsed YAML front matter.
+		 */
+		$post_data = apply_filters( 'wordpressdotorg.markdown_sync.post_data', $post_data, $yaml );
 		wp_update_post( $post_data );
 
 		// Add meta data from YAML front matter.
