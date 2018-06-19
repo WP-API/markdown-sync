@@ -323,7 +323,7 @@ abstract class Importer {
 		$html = $parser->transform( $markdown );
 		$post_data = array(
 			'ID'           => $post_id,
-			'post_content' => wp_filter_post_kses( $html ),
+			'post_content' => wp_kses_post( $html ),
 			'post_excerpt' => sanitize_text_field( $excerpt ),
 		);
 		if ( ! is_null( $title ) ) {
