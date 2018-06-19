@@ -181,7 +181,7 @@ abstract class Importer {
 			'post_status' => 'publish',
 			'post_parent' => $post_parent,
 			'post_title'  => wp_slash( $doc['slug'] ),
-			'post_name'   => sanitize_title_with_dashes( $doc['slug'] ),
+			'post_name'   => sanitize_title( $doc['slug'] ),
 		);
 		if ( isset( $doc['title'] ) ) {
 			$doc['post_title'] = sanitize_text_field( wp_slash( $doc['title'] ) );
@@ -283,21 +283,37 @@ abstract class Importer {
 		$etag = wp_remote_retrieve_header( $response, 'etag' );
 
 		$markdown = wp_remote_retrieve_body( $response );
-		// Strip YAML doc from the header
-		$markdown = preg_replace( '#^---(.+)---#Us', '', $markdown );
+
+		// Get YAML doc from the header
+		preg_match( '#^---(.+)---#Us', $markdown, $yaml_matches );
+		if ( $yaml_matches ) {
+			$yaml_parser = new Yaml();
+			$yaml        = $yaml_parser->loadString( $yaml_matches[1] );
+			// Strip YAML doc from the header
+			$markdown = mb_substr( $markdown, mb_strlen( $yaml_matches[0] ) );
+		} else {
+			$yaml = array();
+		}
 
 		$title = null;
-		if ( preg_match( '/^#\s(.+)/', $markdown, $matches ) ) {
-			$title = $matches[1];
-			$markdown = preg_replace( '/^#\swp\s(.+)/', '', $markdown );
+		if ( preg_match( '/^\n*#\s([^\n]+)/', $markdown, $matches ) ) {
+			$title    = $matches[1];
+			$markdown = preg_replace( '/^\n*#\s([^\n]+)/', '', $markdown );
+		}
+		// Allow YAML override.
+		if ( isset( $yaml['title'] ) ) {
+			$title = $yaml['title'];
 		}
 		$markdown = trim( $markdown );
 
-		// Steal the first sentence as the excerpt
+		// Steal the first paragraph as the excerpt
 		$excerpt = '';
-		if ( preg_match( '/^(.+)/', $markdown, $matches ) ) {
+		if ( preg_match( '/^(.*?)\n\n/', $markdown, $matches ) ) {
 			$excerpt = $matches[1];
-			$markdown = preg_replace( '/^(.+)/', '', $markdown );
+		}
+		// Allow YAML override.
+		if ( isset( $yaml['description'] ) ) {
+			$excerpt = $yaml['description'];
 		}
 
 		// Transform to HTML and save the post
@@ -307,16 +323,65 @@ abstract class Importer {
 		$html = $parser->transform( $markdown );
 		$post_data = array(
 			'ID'           => $post_id,
-			'post_content' => wp_filter_post_kses( wp_slash( $html ) ),
-			'post_excerpt' => sanitize_text_field( wp_slash( $excerpt ) ),
+			'post_content' => wp_kses_post( $html ),
+			'post_excerpt' => sanitize_text_field( $excerpt ),
 		);
 		if ( ! is_null( $title ) ) {
-			$post_data['post_title'] = sanitize_text_field( wp_slash( $title ) );
+			$post_data['post_title'] = sanitize_text_field( $title );
 		}
-		wp_update_post( $post_data );
+
+		/**
+		 * Filters the post data saved to the database for a post.
+		 *
+		 * This can be used to set additional post fields based on YAML front
+		 * matter, such as publish data or author.
+		 *
+		 * @param array $post_data Post data to pass to wp_update_post()
+		 * @param array $yaml      The parsed YAML front matter.
+		 */
+		$post_data = apply_filters( 'wordpressdotorg.markdown_sync.post_data', $post_data, $yaml );
+		wp_update_post( wp_slash( $post_data ) );
+
+		// Add meta data from YAML front matter.
+		if ( isset( $yaml['meta'] ) && is_array( $yaml['meta'] ) ) {
+			/**
+			 * Filters a whitelisted set of meta keys found in the markdown
+			 * YAML front matter.
+			 *
+			 * Example markdown:
+			 *
+			 * ---
+			 * title: Hello World
+			 * meta:
+			 *   foo: bar
+			 *   baz:
+			 *     - lurhmann
+			 * ---
+			 * # Markdown starts here
+			 *
+			 * Anything under `meta:` with a key that's present in $whitelisted_keys will
+			 * be imported as post meta. Arrays will be serialised.
+			 *
+			 * @param array $whitelist_keys The meta keys to be imported if found.
+			 * @param array $yaml           The parsed YAML front matter.
+			 */
+			$whitelisted_keys = apply_filters( 'wordpressdotorg.markdown_sync.meta_whitelist', array(), $yaml );
+			$meta = array_intersect_key( $yaml['meta'], array_flip( $whitelisted_keys ) );
+			foreach ( $meta as $key => $value ) {
+				update_post_meta( $post_id, wp_slash( $key ), wp_slash( $value ) );
+			}
+		}
 
 		// Set ETag for future updates.
 		update_post_meta( $post_id, $this->etag_meta_key, wp_slash( $etag ) );
+
+		/**
+		 * Action for any post processing after post update.
+		 *
+		 * @param int        $post_id The post's ID.
+		 * @param array|bool $yaml    The YAML front matter as an array.
+		 */
+		do_action( 'wordpressdotorg.markdown_sync.update_post', $post_id, $yaml );
 
 		return true;
 	}
