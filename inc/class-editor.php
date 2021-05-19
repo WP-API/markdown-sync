@@ -5,8 +5,10 @@ namespace WordPressdotorg\Markdown;
 use WP_Post;
 
 class Editor {
+	public static Importer $importer;
+
 	public function __construct( Importer $importer ) {
-		$this->importer = $importer;
+		self::$importer = $importer;
 	}
 
 	public function init() {
@@ -59,7 +61,7 @@ class Editor {
 		printf(
 			'<div class="notice notice-warning"><p>%s</p><p><a href="%s">%s</a></p></div>',
 			'This page is maintained on GitHub. Content, title, and slug edits here will be discarded on next sync.',
-			$this->get_markdown_edit_link( $post->ID ),
+			self::get_markdown_edit_link( $post->ID ),
 			'Edit on GitHub'
 		);
 	}
@@ -76,7 +78,7 @@ class Editor {
 			return $title;
 		}
 
-		$markdown_source = $this->get_markdown_edit_link( get_the_ID() );
+		$markdown_source = self::get_markdown_edit_link( get_the_ID() );
 		if ( ! $markdown_source ) {
 			return $title;
 		}
@@ -103,7 +105,7 @@ class Editor {
 			return $link;
 		}
 
-		$markdown_source = $this->get_markdown_edit_link( $post_id );
+		$markdown_source = self::get_markdown_edit_link( $post_id );
 		if ( ! $markdown_source ) {
 			return $link;
 		}
@@ -128,11 +130,11 @@ class Editor {
 			return $actions;
 		}
 
-		if ( $this->importer->get_post_type() !== $post->post_type ) {
+		if ( self::$importer->get_post_type() !== $post->post_type ) {
 			return $actions;
 		}
 
-		$markdown_source = $this->get_markdown_edit_link( $post_id );
+		$markdown_source = self::get_markdown_edit_link( $post_id );
 		if ( ! $markdown_source ) {
 			return $actions;
 		}
@@ -171,8 +173,8 @@ class Editor {
 		return $actions;
 	}
 
-	protected function get_markdown_edit_link( $post_id ) {
-		$markdown_source = $this->importer->get_markdown_source( $post_id );
+	public static function get_markdown_edit_link( $post_id ) {
+		$markdown_source = self::$importer->get_markdown_source( $post_id );
 		if ( is_wp_error( $markdown_source ) ) {
 			return '';
 		}
@@ -180,7 +182,7 @@ class Editor {
 			|| false !== stripos( $markdown_source, '/edit/master/' ) ) {
 			return $markdown_source;
 		}
-		$markdown_source = str_replace( '/blob/master/', '/edit/master/', $markdown_source );
-		return $markdown_source;
+
+		return str_replace( '/blob/master/', '/edit/master/', $markdown_source );
 	}
 }
