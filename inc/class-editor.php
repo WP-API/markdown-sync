@@ -5,6 +5,8 @@ namespace WordPressdotorg\Markdown;
 use WP_Post;
 
 class Editor {
+	public Importer $importer;
+
 	public function __construct( Importer $importer ) {
 		$this->importer = $importer;
 	}
@@ -122,7 +124,7 @@ class Editor {
 	 * add the edit link if it isn't there - it always redirects to GitHub, so it doesn't need to
 	 * obey the edit_post capability in this instance.
 	 */
-	public static function redirect_o2_edit_link_to_github( $actions, $post_id ) {
+	public function redirect_o2_edit_link_to_github( $actions, $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return $actions;
@@ -180,7 +182,7 @@ class Editor {
 			|| false !== stripos( $markdown_source, '/edit/master/' ) ) {
 			return $markdown_source;
 		}
-		$markdown_source = str_replace( '/blob/master/', '/edit/master/', $markdown_source );
-		return $markdown_source;
+
+		return str_replace( '/blob/master/', '/edit/master/', $markdown_source );
 	}
 }
