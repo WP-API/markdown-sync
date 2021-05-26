@@ -5,10 +5,10 @@ namespace WordPressdotorg\Markdown;
 use WP_Post;
 
 class Editor {
-	public static Importer $importer;
+	public Importer $importer;
 
 	public function __construct( Importer $importer ) {
-		self::$importer = $importer;
+		$this->importer = $importer;
 	}
 
 	public function init() {
@@ -61,7 +61,7 @@ class Editor {
 		printf(
 			'<div class="notice notice-warning"><p>%s</p><p><a href="%s">%s</a></p></div>',
 			'This page is maintained on GitHub. Content, title, and slug edits here will be discarded on next sync.',
-			self::get_markdown_edit_link( $post->ID ),
+			$this->get_markdown_edit_link( $post->ID ),
 			'Edit on GitHub'
 		);
 	}
@@ -78,7 +78,7 @@ class Editor {
 			return $title;
 		}
 
-		$markdown_source = self::get_markdown_edit_link( get_the_ID() );
+		$markdown_source = $this->get_markdown_edit_link( get_the_ID() );
 		if ( ! $markdown_source ) {
 			return $title;
 		}
@@ -105,7 +105,7 @@ class Editor {
 			return $link;
 		}
 
-		$markdown_source = self::get_markdown_edit_link( $post_id );
+		$markdown_source = $this->get_markdown_edit_link( $post_id );
 		if ( ! $markdown_source ) {
 			return $link;
 		}
@@ -124,17 +124,17 @@ class Editor {
 	 * add the edit link if it isn't there - it always redirects to GitHub, so it doesn't need to
 	 * obey the edit_post capability in this instance.
 	 */
-	public static function redirect_o2_edit_link_to_github( $actions, $post_id ) {
+	public function redirect_o2_edit_link_to_github( $actions, $post_id ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return $actions;
 		}
 
-		if ( self::$importer->get_post_type() !== $post->post_type ) {
+		if ( $this->importer->get_post_type() !== $post->post_type ) {
 			return $actions;
 		}
 
-		$markdown_source = self::get_markdown_edit_link( $post_id );
+		$markdown_source = $this->get_markdown_edit_link( $post_id );
 		if ( ! $markdown_source ) {
 			return $actions;
 		}
@@ -173,8 +173,8 @@ class Editor {
 		return $actions;
 	}
 
-	public static function get_markdown_edit_link( $post_id ) {
-		$markdown_source = self::$importer->get_markdown_source( $post_id );
+	protected function get_markdown_edit_link( $post_id ) {
+		$markdown_source = $this->importer->get_markdown_source( $post_id );
 		if ( is_wp_error( $markdown_source ) ) {
 			return '';
 		}
