@@ -1,0 +1,16 @@
+{
+    "name": "wp-api/markdown-sync",
+    "description": "Imports markdown from a remote site (like GitHub) into WordPress as pages",
+    "type": "wordpress-plugin",
+    "license": "GPL2+",
+    "authors": [
+        {
+            "name": "WP-API Team",
+            "homepage": "https://github.com/wp-api"
+        }
+    ],
+    "require": {
+        "composer/installers": "~1.0",
+        "php": "^5.6.0||^7.0"
+    }
+}
