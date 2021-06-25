@@ -1,0 +1,3 @@
+# Exclude composer files, we only depend on the installers.
+composer.lock
+vendor/
